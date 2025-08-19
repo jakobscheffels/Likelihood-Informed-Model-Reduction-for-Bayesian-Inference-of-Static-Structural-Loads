@@ -16,5 +16,4 @@ function K = assembleBeamK(E,I,l,nele,nnode)
     for i = 1:nele
         K(2*(i-1)+1:(2*(i-1)+4),2*(i-1)+1:(2*(i-1)+4))=K(2*(i-1)+1:(2*(i-1)+4),2*(i-1)+1:(2*(i-1)+4))+Ke;
     end
-
 end

@@ -305,4 +305,3 @@ set(gcf, 'Units', 'inches');
 set(gcf, 'Position', [0.5 0.5 width height]);
 set(gcf, 'PaperUnits', 'inches');
 set(gcf, 'PaperSize', [width height]);
-set(gcf, 'PaperPosition', [0 0 width height]);

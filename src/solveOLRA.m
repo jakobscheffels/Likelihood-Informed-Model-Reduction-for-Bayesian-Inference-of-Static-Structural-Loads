@@ -15,5 +15,4 @@ function [posCov,G, df] = solveOLRA(V,W)
     G = G*Pr;
 
     [posCov,df] = posteriorCovarianceReduced(G);
-
 end

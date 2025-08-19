@@ -19,5 +19,4 @@ function KG = assembleGroundStiffnessK(k_vector)
         KG(2*(i-1)+1:(2*(i-1)+4),2*(i-1)+1:(2*(i-1)+4))=KG(2*(i-1)+1:(2*(i-1)+4),2*(i-1)+1:(2*(i-1)+4))+Ke;
     
     end
-
 end

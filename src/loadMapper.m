@@ -23,5 +23,4 @@ function L_mat = loadMapper(beam_bool,nnode,nele,l)
         L_mat = L_mat + sparse(1:nele,1:nele,l/2,nnode,nele);
         L_mat = L_mat + sparse(2:nele+1,1:nele,l/2,nnode,nele);
     end
-
 end

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 function [posCov, G, df] = solveReducedModel(V,W)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Function to solve for posterior covariance using model reduction
@@ -14,5 +15,4 @@ function [posCov, G, df] = solveReducedModel(V,W)
     G = B*V*(K_red\W');
     
     [posCov, df] = posteriorCovarianceReduced(G);
-
 end
