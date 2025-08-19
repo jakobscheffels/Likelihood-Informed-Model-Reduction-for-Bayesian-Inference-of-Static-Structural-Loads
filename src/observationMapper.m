@@ -26,5 +26,4 @@ function B_obs = observationMapper(nm_pos)
             j=j+1;
         end        
     end
-
 end

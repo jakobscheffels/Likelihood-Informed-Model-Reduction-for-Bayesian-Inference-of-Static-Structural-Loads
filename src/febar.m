@@ -17,4 +17,3 @@ function u = febar( D, F )
     u = K\F;
 
 end
-

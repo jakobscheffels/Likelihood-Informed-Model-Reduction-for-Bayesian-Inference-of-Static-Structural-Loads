@@ -48,17 +48,17 @@ function [S_q, S_u, Phi, Sigma] = gen_samples(n_in)
 end
 
 function u = evaluateU(F)
-        load 'Parameters.mat' 'beam_bool' 'nele' 'D' 'E'  'BC_dofs' 't' 'zeta' 'k_vector' 'l'
-        if beam_bool
-            
-            EI = pi/64*zeta*E*(D^4-(D-2*t)^4);
-            K = assembleBeamK(EI,1,l,nele,nele+1);
-            KG = assembleGroundStiffnessK(k_vector);
-            K = K+KG;
-            K = applyBoundaryCondition(K,BC_dofs);
-            u=K\F;
-            
-        else
-            u = febar(D,F);
-        end
+    load 'Parameters.mat' 'beam_bool' 'nele' 'D' 'E'  'BC_dofs' 't' 'zeta' 'k_vector' 'l'
+    if beam_bool
+        
+        EI = pi/64*zeta*E*(D^4-(D-2*t)^4);
+        K = assembleBeamK(EI,1,l,nele,nele+1);
+        KG = assembleGroundStiffnessK(k_vector);
+        K = K+KG;
+        K = applyBoundaryCondition(K,BC_dofs);
+        u=K\F;
+        
+    else
+        u = febar(D,F);
     end
+end
