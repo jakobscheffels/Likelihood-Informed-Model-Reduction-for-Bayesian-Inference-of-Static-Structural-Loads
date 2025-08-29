@@ -1,28 +1,28 @@
-function B_obs = observationMapper(nm_pos)
+function C = observationMapper(m_pos)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%     Function to assemble mapping matrices
 %%%
-%%%     Input:  nm_pos      Position indices of observable nodes
+%%%     Input:  m_pos      Position indices of observable nodes
 %%%
-%%%     Output: B_obs       Operator to extract observable nodes from full
+%%%     Output: C          Operator to extract observable nodes from full
 %%%                         state
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    load('Parameters.mat','beam_bool','nnode')
+    load Parameters.mat 'beam_bool' 'nnode'
     
-    nm = length(nm_pos);
+    m = length(m_pos);
 
     if beam_bool
-        B_obs = zeros(nm,2*nnode);
+        C = zeros(m,2*nnode);
         j=1;
-        for i=1:nm
-            B_obs(j,2*(nm_pos(i)-1)+1)=1;
+        for i=1:m
+            C(j,2*(m_pos(i)-1)+1)=1;
             j=j+1;
         end
     else
-        B_obs = zeros(nm,nnode);
+        C = zeros(m,nnode);
         j=1;
-        for i=1:nm
-            B_obs(j,nm_pos(i))=1;
+        for i=1:m
+            C(j,m_pos(i))=1;
             j=j+1;
         end        
     end

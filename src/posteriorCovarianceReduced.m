@@ -19,20 +19,20 @@ function df = foerstnerDistance(gamma1)
     load LIP_Setup.mat gamma_pos
     load LIS_Basis.mat W
   
-  
+    % Calculate cholesky factor of projected covariances
     L = chol(W'*gamma1*W,'lower');
     R = chol(W'*gamma_pos*W,'lower');
     
-    [df,~]=gen_eigenvalue(L,R);
+    % Solve for generalized eigenvalues
+    df=gen_eigenvalue(L,R);
     df(abs(df)<eps)=[];
+    % Evaluate squared Foerstner distance
     df = dot(log(df),log(df));
 end
 
-function [delta, w] = gen_eigenvalue(L,R)
-
+function delta = gen_eigenvalue(L,R)
+    % Solve for generalized eigenvalues using SVD
     tmp = L'/R';
-    [U,S,~]=svd(tmp);
+    [~,S,~]=svd(tmp);
     delta = diag(S).^2;
-    w = R*U;
-
 end

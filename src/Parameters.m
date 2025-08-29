@@ -24,16 +24,20 @@ function Parameters(inputName, inputVal)
 
     D = 4e8;
     E = 10000;
-    BC_dofs = 1;
 
+    % DOF with Dirichlet B.C.
+    BC_dofs = 1;
+    
+    % Boolean to determine to use beam elements
     beam_bool = false;
+    % Dirichlet B.C.
     fixed = {'true'};
+
     % distributed load
     mu_q = 4e6;
     sigma_q = 0.3*mu_q;
     
-
-    moments = false;
+    % Boolean to use tunnel segments
     tunnel = false;
     k_vector = zeros(nnode,1);
     zeta = 1/7;
@@ -65,8 +69,6 @@ function Parameters(inputName, inputVal)
                 fixed=input{1};
             elseif strcmp(inputName(i),'BC_dofs')
                 BC_dofs=sort(input{1});
-            elseif strcmp(inputName(i),'moments')
-                moments=input{1};
             elseif strcmp(inputName(i),'tunnel')
                 tunnel=input{1};
             elseif strcmp(inputName(i),'k_vector')
@@ -84,10 +86,6 @@ function Parameters(inputName, inputVal)
         end
     end
     
-    if ~beam_bool
-        moments=false;
-    end
-
     l=L/nele;
     x_dofs=0:l:L;
     
@@ -102,6 +100,6 @@ function Parameters(inputName, inputVal)
     % Store parameters in 'Parameters.mat'
     save('Parameters','BC_dofs','D', ...
         'E','l','L','L_mat','mu_q','nele','nnode','sigma_q','theta','tunnel',...
-        'k_vector','x_dofs','beam_bool','fixed','index_disp','moments',...
+        'k_vector','x_dofs','beam_bool','fixed','index_disp',...
         'zeta','t')
 end

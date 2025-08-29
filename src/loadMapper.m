@@ -1,6 +1,7 @@
 function L_mat = loadMapper(beam_bool,nnode,nele,l)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%     Function to assemble mapping matrices
+%%%     Function to assemble mapping matrices to map distributed load to
+%%%     nodal force vector
 %%%
 %%%     Input:  beam_bool   True if structure is beam
 %%%             nnode       Number of nodes

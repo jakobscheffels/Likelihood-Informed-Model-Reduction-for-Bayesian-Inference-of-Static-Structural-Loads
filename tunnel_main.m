@@ -1,5 +1,5 @@
-
 clearvars
+addpath src\
 %% Parameters
 rng(41)
 
@@ -32,11 +32,11 @@ Parameters({'beam_bool','BC_dofs','fixed','L','nele','E','D','theta','sigma_q','
     {beam_bool,BC_dofs,fixed,L,nele,E,D,theta,sigma_q,mu_q,k_vector,zeta,t,tunnel});
 load Parameters.mat
 
-N_mean = 10;
+N_rep = 200;
 %% Setup inverse problem
 
 LIP_Setup();
-load LIP_Setup.mat B gamma_prior_f gamma_obs gamma_pos G nm
+load LIP_Setup.mat C gamma_prior_f gamma_obs gamma_pos G m
 
 %% POD Analysis
 if run_POD_analysis
@@ -51,8 +51,7 @@ if run_POD_analysis
     S_f200 = L_mat*S_f200;
     S_f500 = L_mat*S_f500;
     
-    S_fTotal = [S_f10, S_f50, S_f100, S_f200, S_f500];
-    S_uTotal = [S_u10, S_u50, S_u100, S_u200, S_u500];
+    [~,S_uTest,~,~] = gen_samples(200);
     
     proj_errorPOD10 = zeros(1,10);
     proj_errorPOD50 = zeros(1,50);
@@ -62,18 +61,18 @@ if run_POD_analysis
     
     for i=1:500
         if i<11
-            proj_errorPOD10(i) = mean(vecnorm(S_uTotal-Phi10(:,1:i)*Phi10(:,1:i)'*S_uTotal,2,1));
+            proj_errorPOD10(i) = mean(vecnorm(S_uTest-Phi10(:,1:i)*Phi10(:,1:i)'*S_uTest,2,1));
         end
         if i<51
-            proj_errorPOD50(i) = mean(vecnorm(S_uTotal-Phi50(:,1:i)*Phi50(:,1:i)'*S_uTotal,2,1));
+            proj_errorPOD50(i) = mean(vecnorm(S_uTest-Phi50(:,1:i)*Phi50(:,1:i)'*S_uTest,2,1));
         end
         if i<101
-            proj_errorPOD100(i) = mean(vecnorm(S_uTotal-Phi100(:,1:i)*Phi100(:,1:i)'*S_uTotal,2,1));
+            proj_errorPOD100(i) = mean(vecnorm(S_uTest-Phi100(:,1:i)*Phi100(:,1:i)'*S_uTest,2,1));
         end
         if i<201
-            proj_errorPOD200(i) = mean(vecnorm(S_uTotal-Phi200(:,1:i)*Phi200(:,1:i)'*S_uTotal,2,1));
+            proj_errorPOD200(i) = mean(vecnorm(S_uTest-Phi200(:,1:i)*Phi200(:,1:i)'*S_uTest,2,1));
         end
-        proj_errorPOD500(i) = mean(vecnorm(S_uTotal-Phi500(:,1:i)*Phi500(:,1:i)'*S_uTotal,2,1));
+        proj_errorPOD500(i) = mean(vecnorm(S_uTest-Phi500(:,1:i)*Phi500(:,1:i)'*S_uTest,2,1));
     end
 else
     [~,~,Phi10,~] = gen_samples(10);
@@ -82,11 +81,11 @@ end
 [delta,V,W]=calculateLISBasis();
 
 Phi = Phi10;
-d_f_OLR = zeros(1,nm);
-d_f_LI = zeros(1,nm);
-d_f_POD = zeros(1,nm);
+d_f_OLR = zeros(1,m);
+d_f_LI = zeros(1,m);
+d_f_POD = zeros(1,m);
 
-for i =1:nm
+for i =1:m
     [posCovLI,G_LI_cell{i},d_f_LI(i)] = solveReducedModel(V(:,1:i),W(:,1:i));
 
     [posCovOLR,G_OLR_cell{i},d_f_OLR(i)] = solveOLRA(V(:,1:i),W(:,1:i));
@@ -95,18 +94,18 @@ for i =1:nm
 end
 
 %% Mean 
-[~,state_sample] = gen_samples(N_mean);
+[~,state_sample] = gen_samples(N_rep);
 
-error_LI=zeros(N_mean,nm);
-error_POD=zeros(N_mean,nm);
-error_OLR=zeros(N_mean,nm);
-for j=1:N_mean
-    ysam = B*state_sample(:,j)+sqrt(gamma_obs)*randn(nm,1);
+error_LI=zeros(N_rep,m);
+error_POD=zeros(N_rep,m);
+error_OLR=zeros(N_rep,m);
+for j=1:N_rep
+    ysam = C*state_sample(:,j)+sqrt(gamma_obs)*randn(m,1);
    
     mu_full = meanCalculation(G,ysam);
     mu_full_norm = norm(mu_full);
 
-    for i = 1:nm
+    for i = 1:m
         mu_LI = meanCalculation(G_LI_cell{i},ysam);
 
         mu_POD = meanCalculation(G_POD_cell{i},ysam);
@@ -132,13 +131,13 @@ if run_POD_analysis
     figure
     t = tiledlayout(1,2, 'Padding', 'compact', 'TileSpacing', 'compact');
     nexttile;
-    loglog(diag(Sigma10),'LineWidth',2)
+    loglog(diag(Sigma10),'--o')
     box off
     set(gca,'FontSize',20)
     hold on
-    loglog(diag(Sigma50),'LineWidth',2)
-    loglog(diag(Sigma100),'LineWidth',2)
-    loglog(diag(Sigma200),'LineWidth',2)
+    loglog(diag(Sigma50),'LineWidth',2,'LineStyle','--')
+    loglog(diag(Sigma100),'LineWidth',2,'LineStyle',':')
+    loglog(diag(Sigma200),'LineWidth',2,'LineStyle','-.')
     loglog(diag(Sigma500),'LineWidth',2)
     xlabel('Approximation rank r', 'Interpreter','latex')
     title('Singular value decay','Interpreter','latex','FontSize',28)
@@ -148,13 +147,13 @@ if run_POD_analysis
  
     nexttile;
     
-    loglog(proj_errorPOD10,'LineWidth',2)
+    loglog(proj_errorPOD10,'--o')
     box off
     set(gca,'FontSize',20)
     hold on
-    loglog(proj_errorPOD50,'LineWidth',2)
-    loglog(proj_errorPOD100,'LineWidth',2)
-    loglog(proj_errorPOD200,'LineWidth',2)
+    loglog(proj_errorPOD50,'LineWidth',2,'LineStyle','--')
+    loglog(proj_errorPOD100,'LineWidth',2,'LineStyle',':')
+    loglog(proj_errorPOD200,'LineWidth',2,'LineStyle','-.')
     loglog(proj_errorPOD500,'LineWidth',2)
     legend('10','50','100','200','500','Location','southwest')
     legend boxoff
@@ -167,6 +166,8 @@ if run_POD_analysis
     set(gcf, 'PaperUnits', 'inches');
     set(gcf, 'PaperSize', [width height]);
     set(gcf, 'PaperPosition', [0 0 width height]);
+
+    exportgraphics(gcf, 'PODTunnel.pdf', 'ContentType', 'vector');
     
 end
 
@@ -209,7 +210,7 @@ ax = gca;
 ax.CLim=[0 max(max(gamma_prior_f(1:2:end,1:2:end)))];
 yticks([])
 colorbar
-title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{LI}}$','Interpreter','latex','FontSize',28)
+title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{LIS}}$','Interpreter','latex','FontSize',28)
 
 % Add colorbar below both plots using the first axes
 cb = colorbar(ax3, 'Location', 'eastoutside');
@@ -247,6 +248,8 @@ set(gcf, 'PaperUnits', 'inches');
 set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
 
+exportgraphics(gcf, 'priorTunnel.pdf', 'ContentType', 'vector');
+
 height = 6;
 
 figure
@@ -260,7 +263,7 @@ hold on
 semilogy(mean_POD,'Color',POD_color,'LineWidth',2)
 semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
 
-legend('LI','POD','OLR','Location','southwest')
+legend('LIS','POD','OLR','Location','southwest')
 legend boxoff
 title('Relative posterior mean error','Interpreter','latex','FontSize',28)
 axis([1 10 1e-15 100])
@@ -278,7 +281,7 @@ semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
 title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
-legend('LI','POD','OLR','Location','southwest')
+legend('LIS','POD','OLR','Location','southwest')
 legend boxoff
 axis([1 10 1e-15 100])
 yticks([10^(-15) 10^(-10) 10^(-5) 1])
@@ -288,3 +291,5 @@ set(gcf, 'Position', [.5 .5 width height]);
 set(gcf, 'PaperUnits', 'inches');
 set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
+
+exportgraphics(gcf, 'posTunnel.pdf', 'ContentType', 'vector');
