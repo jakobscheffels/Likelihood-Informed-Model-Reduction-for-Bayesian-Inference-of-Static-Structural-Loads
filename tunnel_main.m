@@ -3,7 +3,7 @@ addpath src\
 %% Parameters
 rng(41)
 
-run_POD_analysis = true; % set 'true' if want to run POD analysis
+run_POD_analysis = false; % set 'true' if want to run POD analysis
 
 beam_bool = true;
 tunnel = true;
@@ -36,8 +36,9 @@ N_rep = 200;
 %% Setup inverse problem
 
 LIP_Setup();
-load LIP_Setup.mat C gamma_prior_f gamma_obs gamma_pos G m
-
+load LIP_Setup.mat C gamma_prior_f gamma_obs gamma_pos G m K mu_f S_pr 
+[~,~,omega]=svd((chol(gamma_obs,'lower')\G)*S_pr);
+V = S_pr*omega;
 %% POD Analysis
 if run_POD_analysis
     [S_f10,S_u10,Phi10,Sigma10] = gen_samples(10);
@@ -79,7 +80,8 @@ else
 end
 %% Model Reduction
 [delta,V,W]=calculateLISBasis();
-
+[~,state_samples] = gen_samples(100);
+save LIS_Basis_Tunnel.mat V W K mu_f state_samples
 Phi = Phi10;
 d_f_OLR = zeros(1,m);
 d_f_LI = zeros(1,m);
@@ -131,7 +133,7 @@ if run_POD_analysis
     figure
     t = tiledlayout(1,2, 'Padding', 'compact', 'TileSpacing', 'compact');
     nexttile;
-    loglog(diag(Sigma10),'--o')
+    loglog(diag(Sigma10),'--o','LineWidth',2,'MarkerSize',get(0,'DefaultLineMarkerSize'))
     box off
     set(gca,'FontSize',20)
     hold on
@@ -147,7 +149,7 @@ if run_POD_analysis
  
     nexttile;
     
-    loglog(proj_errorPOD10,'--o')
+    loglog(proj_errorPOD10,'--o','LineWidth',2,'MarkerSize',get(0,'DefaultLineMarkerSize'))
     box off
     set(gca,'FontSize',20)
     hold on
@@ -293,3 +295,8 @@ set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
 
 exportgraphics(gcf, 'posTunnel.pdf', 'ContentType', 'vector');
+
+theta=zeros(1,10);
+for i=1:10
+    theta(i)=1/(norm(V(:,i))*norm(W(:,i)));
+end

@@ -58,7 +58,7 @@ function LIP_Setup(inputName, inputVal)
             KG = assembleGroundStiffnessK(k_vector);
             K = K + KG;
         else
-            K = assembleBeamK(E,I,L,nele,nnode);
+            K = assembleBeamK(E,I,l,nele,nnode);
         end
     else
         % Assemble bar stiffness matrix
