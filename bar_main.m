@@ -3,10 +3,10 @@ clearvars
 addpath src\
 %% Parameters of the problem
 rng(25);
-run_POD_analysis = true; % set 'true' if want to run POD analysis
+run_POD_analysis = false; % set 'true' if want to run POD analysis
 
 %% Setup of the problem
-Parameters();
+Parameters({'beam_bool'},{true});
 load('Parameters.mat')
 
 x_dofs=applyBoundaryCondition(x_dofs,BC_dofs,'Coordinate');
@@ -15,10 +15,13 @@ LIP_Setup();
 load('LIP_Setup.mat')
 
 %% Generalized eigenvectors / LIS basis
+%[~,~,omega]=svd((chol(gamma_obs,'lower')\G)*S_pr);
+%V = S_pr*omega;
 [~,V,W] = calculateLISBasis();
-
+[~,state_samples]=gen_samples(100);
+save LIS_Basis_Beam.mat V W K mu_f state_samples
 %% Mean samples
-N_rep = 200;
+N_rep = 100;
 
 % Generate sample
 [~,state_sample]=gen_samples(N_rep);
@@ -103,6 +106,13 @@ for i=1:m
     %% Spantini Reduction
     [gamma_pos_OLR,G_OLR_cell{i},d_f_OLR(i)]=solveOLRA(V(:,1:i),W(:,1:i));
     
+    gamma_prior_red = Phi(:,1:i)'*gamma_prior_f*Phi(:,1:i);
+    G_red = C*Phi(:,1:i)*inv(Phi(:,1:i)'*K*Phi(:,1:i));
+    gamma_pos_red = gamma_prior_red-gamma_prior_red*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*gamma_prior_red;
+    %gamma_pos_PO = gamma_prior_f-Phi(:,1:i)*gamma_prior_red*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*gamma_prior_red*Phi(:,1:i)';
+    %gamma_pos_PO2 = gamma_prior_f-gamma_prior_f*Phi(:,1:i)*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*Phi(:,1:i)'*gamma_prior_f;
+    %d_f_POD2(i)=foerstnerDistance(gamma_pos_PO);
+    
 end
 
 %% Posterior Mean Analysis
@@ -145,6 +155,7 @@ mean_OLR = mean(error_OLR,1);
 
 
 %% PLOTS
+%{
 width = 14.5;
 height= 8;
 
@@ -262,7 +273,7 @@ set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
 
 exportgraphics(gcf, 'priorBar.pdf', 'ContentType', 'vector');
-
+%}
 height = 6;
 alpha = 0.5;
 LI_color = (1-alpha)*[0.4660 0.6740 0.1880]+alpha*[1 1 1];
@@ -304,9 +315,9 @@ legend boxoff
 axis([1 10 1e-18 1])
 yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
 
-set(gcf, 'Units', 'inches');
-set(gcf, 'Position', [0.5 0.5 width height]);
-set(gcf, 'PaperUnits', 'inches');
-set(gcf, 'PaperSize', [width height]);
+%set(gcf, 'Units', 'inches');
+%set(gcf, 'Position', [0.5 0.5 width height]);
+%set(gcf, 'PaperUnits', 'inches');
+%set(gcf, 'PaperSize', [width height]);
 
-exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');
+%exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');

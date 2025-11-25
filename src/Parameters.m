@@ -24,7 +24,7 @@ function Parameters(inputName, inputVal)
 
     D = 4e8;
     E = 10000;
-
+    I = 10000;
     % DOF with Dirichlet B.C.
     BC_dofs = 1;
     
@@ -99,7 +99,7 @@ function Parameters(inputName, inputVal)
 
     % Store parameters in 'Parameters.mat'
     save('Parameters','BC_dofs','D', ...
-        'E','l','L','L_mat','mu_q','nele','nnode','sigma_q','theta','tunnel',...
+        'E','I','l','L','L_mat','mu_q','nele','nnode','sigma_q','theta','tunnel',...
         'k_vector','x_dofs','beam_bool','fixed','index_disp',...
         'zeta','t')
 end

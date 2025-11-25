@@ -17,8 +17,9 @@ function [delta,V,W]=calculateLISBasis()
     delta=delta(1:r);
     Z = Z(:,1:r);
     
-    V = S_pr*(Z.*(1./sqrt(delta))');
-    W = R*(U.*(1./sqrt(delta))');
- 
+    %V = S_pr*(Z.*(1./sqrt(delta))');
+    %W = R*(U.*(1./sqrt(delta))');
+    V = S_pr*Z;
+    W = R*U.*(1./delta)';
     save LIS_Basis W V
 end
