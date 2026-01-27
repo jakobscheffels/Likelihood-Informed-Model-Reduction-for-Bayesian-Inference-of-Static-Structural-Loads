@@ -79,16 +79,18 @@ else
     [~,~,Phi10,~] = gen_samples(10);
 end
 %% Model Reduction
-[delta,V,W]=calculateLISBasis();
-[~,state_samples] = gen_samples(100);
-save LIS_Basis_Tunnel.mat V W K mu_f state_samples
+[delta,V,W,V_State]=calculateLISBasis();
+%[~,state_samples] = gen_samples(100);
+%save LIS_Basis_Tunnel.mat V W K mu_f state_samples
 Phi = Phi10;
 d_f_OLR = zeros(1,m);
 d_f_LI = zeros(1,m);
 d_f_POD = zeros(1,m);
+d_f_Sta = zeros(1,m);
 
 for i =1:m
     [posCovLI,G_LI_cell{i},d_f_LI(i)] = solveReducedModel(V(:,1:i),W(:,1:i));
+    [~,G_Sta_cell{i},d_f_Sta(i)] = solveReducedModel(V_State(:,1:i),W(:,1:i));
 
     [posCovOLR,G_OLR_cell{i},d_f_OLR(i)] = solveOLRA(V(:,1:i),W(:,1:i));
 
@@ -101,6 +103,8 @@ end
 error_LI=zeros(N_rep,m);
 error_POD=zeros(N_rep,m);
 error_OLR=zeros(N_rep,m);
+error_Sta = zeros(N_rep,m);
+
 for j=1:N_rep
     ysam = C*state_sample(:,j)+sqrt(gamma_obs)*randn(m,1);
    
@@ -109,6 +113,7 @@ for j=1:N_rep
 
     for i = 1:m
         mu_LI = meanCalculation(G_LI_cell{i},ysam);
+        mu_Sta = meanCalculation(G_Sta_cell{i},ysam);
 
         mu_POD = meanCalculation(G_POD_cell{i},ysam);
 
@@ -117,12 +122,14 @@ for j=1:N_rep
         error_LI(j,i) = norm(mu_full-mu_LI)/mu_full_norm;
         error_POD(j,i) = norm(mu_full-mu_POD)/mu_full_norm;
         error_OLR(j,i) = norm(mu_full-mu_OLR)/mu_full_norm;
+        error_Sta(j,i) = norm(mu_full-mu_Sta)/mu_full_norm;
     end
     
 end
 mean_LI = mean(error_LI,1);
 mean_POD = mean(error_POD,1);
 mean_OLR = mean(error_OLR,1);
+mean_Sta = mean(error_Sta,1);
 
 
 %% PLOT
@@ -179,7 +186,7 @@ LI_color = (1-alpha)*[0.4660 0.6740 0.1880]+alpha*[1 1 1];
 OLR_color = (1-alpha)*[0.8500 0.3250 0.0980]+alpha*[1 1 1];
 alpha=0.25;
 POD_color = (1-alpha)*[0.3010 0.7450 0.9330]+alpha*[1 1 1];
-
+%{
 figure
 t = tiledlayout(2,3, 'Padding', 'compact', 'TileSpacing', 'compact');
 
@@ -251,7 +258,7 @@ set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
 
 exportgraphics(gcf, 'priorTunnel.pdf', 'ContentType', 'vector');
-
+%}
 height = 6;
 
 figure
@@ -264,8 +271,9 @@ box off
 hold on
 semilogy(mean_POD,'Color',POD_color,'LineWidth',2)
 semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
+semilogy(mean_Sta,'LineWidth',2)
 
-legend('LIS','POD','OLR','Location','southwest')
+legend('LIS','POD','OLR','State','Location','southwest')
 legend boxoff
 title('Relative posterior mean error','Interpreter','latex','FontSize',28)
 axis([1 10 1e-15 100])
@@ -280,10 +288,11 @@ box off
 hold on
 semilogy(sqrt(d_f_POD),'Color',POD_color,'LineWidth',2)
 semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
+semilogy(sqrt(d_f_Sta),'LineWidth',2)
 title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
-legend('LIS','POD','OLR','Location','southwest')
+legend('LIS','POD','OLR','State','Location','southwest')
 legend boxoff
 axis([1 10 1e-15 100])
 yticks([10^(-15) 10^(-10) 10^(-5) 1])

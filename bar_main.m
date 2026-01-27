@@ -17,9 +17,9 @@ load('LIP_Setup.mat')
 %% Generalized eigenvectors / LIS basis
 %[~,~,omega]=svd((chol(gamma_obs,'lower')\G)*S_pr);
 %V = S_pr*omega;
-[~,V,W] = calculateLISBasis();
-[~,state_samples]=gen_samples(100);
-save LIS_Basis_Beam.mat V W K mu_f state_samples
+[~,V,W,V_State] = calculateLISBasis();
+%[~,state_samples]=gen_samples(100);
+%save LIS_Basis_Beam.mat V W K mu_f state_samples
 %% Mean samples
 N_rep = 100;
 
@@ -92,11 +92,13 @@ end
 
 d_f_LI=zeros(1,m);
 d_f_OLR=zeros(1,m);
+d_f_Sta=zeros(1,m);
 
 for i=1:m
 
     %% LIS reduced operator
     [gamma_pos_LI,G_LI_cell{i},d_f_LI(i)]=solveReducedModel(V(:,1:i),W(:,1:i));
+    [gamma_pos_Sta,G_Sta_cell{i},d_f_Sta(i)]=solveReducedModel(V_State(:,1:i),W(:,1:i));
     
     %% POD reduced operator
     if ~run_POD_analysis
@@ -119,6 +121,7 @@ end
 
 error_LI = zeros(N_rep,m);
 error_OLR = zeros(N_rep,m);
+error_Sta = zeros(N_rep,m);
 
 mu_tilde = meanCalculation(G,zeros(m,1));
 
@@ -131,6 +134,7 @@ for j=1:N_rep
     for i = 1:m
         % LIS approximation
         mu_LIS = meanCalculation(G_LI_cell{i},ysam);
+        mu_Sta = meanCalculation(G_Sta_cell{i},ysam);
 
         % POD approximation
         if ~run_POD_analysis
@@ -143,6 +147,7 @@ for j=1:N_rep
 
         error_LI(j,i) = norm(mu_full-mu_LIS)/mu_full_norm;
         error_OLR(j,i) = norm(mu_full-mu_Sp_3)/mu_full_norm;
+        error_Sta(j,i) = norm(mu_full-mu_Sta)/mu_full_norm;
     end
     
 end
@@ -153,6 +158,7 @@ if ~run_POD_analysis
 end
 mean_OLR = mean(error_OLR,1);
 
+mean_Sta = mean(error_Sta,1);
 
 %% PLOTS
 %{
@@ -291,8 +297,9 @@ box off
 hold on
 semilogy(mean_POD10,'Color',POD_color,'LineWidth',2)
 semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
+semilogy(mean_Sta,'LineWidth',2)
 
-legend('LIS','POD','OLR','Location','southwest')
+legend('LIS','POD','OLR','State','Location','southwest')
 legend boxoff
 title('Relative posterior mean error','Interpreter','latex','FontSize',28)
 axis([1 10 1e-18 1])
@@ -307,10 +314,11 @@ box off
 hold on
 semilogy(sqrt(d_f_POD10),'Color',POD_color,'LineWidth',2)
 semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
+semilogy(sqrt(d_f_Sta),'LineWidth',2)
 title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
-legend('LIS','POD','OLR','Location','southwest')
+legend('LIS','POD','OLR','State','Location','southwest')
 legend boxoff
 axis([1 10 1e-18 1])
 yticks([10^(-15) 10^(-10) 10^(-5) 10^0])

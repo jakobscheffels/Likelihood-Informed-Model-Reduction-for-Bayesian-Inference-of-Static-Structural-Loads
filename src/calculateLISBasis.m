@@ -1,4 +1,4 @@
-function [delta,V,W]=calculateLISBasis()
+function [delta,V,W,V_State]=calculateLISBasis()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Function to calculate LIS basis
     % OUT:  delta: singular values of basis
@@ -16,10 +16,12 @@ function [delta,V,W]=calculateLISBasis()
     U = U(:,1:r);
     delta=delta(1:r);
     Z = Z(:,1:r);
+    C_inv = C'/(C*C');
+    V_State = C_inv*sqrt(gamma_obs)*U;
     
     %V = S_pr*(Z.*(1./sqrt(delta))');
     %W = R*(U.*(1./sqrt(delta))');
     V = S_pr*Z;
     W = R*U.*(1./delta)';
-    save LIS_Basis W V
+    save LIS_Basis W V 
 end
