@@ -6,12 +6,12 @@ rng(25);
 run_POD_analysis = false; % set 'true' if want to run POD analysis
 
 %% Setup of the problem
-Parameters({'beam_bool'},{true});
+Parameters({'beam_bool'},{false});
 load('Parameters.mat')
 
 x_dofs=applyBoundaryCondition(x_dofs,BC_dofs,'Coordinate');
 
-LIP_Setup();
+LIP_Setup({'gamma_obs'},{0.001^2});
 load('LIP_Setup.mat')
 
 %% Generalized eigenvectors / LIS basis
@@ -21,7 +21,7 @@ load('LIP_Setup.mat')
 %[~,state_samples]=gen_samples(100);
 %save LIS_Basis_Beam.mat V W K mu_f state_samples
 %% Mean samples
-N_rep = 100;
+N_rep = 200;
 
 % Generate sample
 [~,state_sample]=gen_samples(N_rep);
@@ -161,7 +161,7 @@ mean_OLR = mean(error_OLR,1);
 mean_Sta = mean(error_Sta,1);
 
 %% PLOTS
-%{
+
 width = 14.5;
 height= 8;
 
@@ -221,7 +221,14 @@ axis equal tight;
 set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
 ylabel('z','Interpreter','latex')
-title("Prior covariance",'Interpreter','latex','FontSize',28)
+title("Prior covariance",'Interpreter','latex','FontSize',22)
+n = 256;
+cmap = [ ...
+    linspace(1,0,n)', ...   % R: 1 → 0
+    linspace(1,0,n)', ...   % G: 1 → 0
+    ones(n,1) ];           % B: stays 1
+
+colormap(cmap)
 
 ax2 = nexttile;
 imagesc(x_dofs,x_dofs,gamma_pos)
@@ -232,7 +239,8 @@ ax = gca;
 ax.CLim=[0 max(max(gamma_prior_f))];
 yticks([])
 %title('Analytical posterior covariance $\mathbf{\Gamma}_{\mathrm{pos}}$','Interpreter','latex','FontSize',18)
-title('Posterior covariance','Interpreter','latex','FontSize',28)
+title('Posterior covariance','Interpreter','latex','FontSize',22)
+colormap(cmap)
 
 ax3 = nexttile;
 imagesc(x_dofs,x_dofs,gamma_pos_LI)
@@ -244,8 +252,9 @@ ax.CLim=[0 max(max(gamma_prior_f))];
 yticks([])
 colorbar
 title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\scriptscriptstyle \mathrm{LIS}}$', ...
-      'Interpreter', 'latex', 'FontSize', 28)
+      'Interpreter', 'latex', 'FontSize', 22)
 cb = colorbar(ax3, 'Location', 'eastoutside');
+colormap(cmap)
 
 nexttile;
 axis off;
@@ -258,8 +267,8 @@ xlabel('z','Interpreter','latex')
 ylabel('z','Interpreter','latex')
 ax = gca;
 ax.CLim=[0 max(max(gamma_prior_f))];
-
-title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\scriptscriptstyle \mathrm{OLR}}$','Interpreter','latex','FontSize',28)
+colormap(cmap)
+title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\scriptscriptstyle \mathrm{OLR}}$','Interpreter','latex','FontSize',22)
 
 ax6 = nexttile;
 imagesc(x_dofs,x_dofs,gamma_pos_POD)
@@ -270,7 +279,8 @@ ax = gca;
 ax.CLim=[0 max(max(gamma_prior_f))];
 yticks([])
 colorbar
-title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\scriptscriptstyle \mathrm{POD}}$','Interpreter','latex','FontSize',28)
+colormap(cmap)
+title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\scriptscriptstyle \mathrm{POD}}$','Interpreter','latex','FontSize',22)
 
 set(gcf, 'Units', 'inches');
 set(gcf, 'Position', [0.5 0.5 width height]);
@@ -279,12 +289,12 @@ set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
 
 exportgraphics(gcf, 'priorBar.pdf', 'ContentType', 'vector');
-%}
+
 height = 6;
-alpha = 0.5;
+alpha = 0.25;
 LI_color = (1-alpha)*[0.4660 0.6740 0.1880]+alpha*[1 1 1];
 OLR_color = (1-alpha)*[0.8500 0.3250 0.0980]+alpha*[1 1 1];
-alpha=0.25;
+alpha=0.0;
 POD_color = (1-alpha)*[0.3010 0.7450 0.9330]+alpha*[1 1 1];
 
 figure
@@ -295,9 +305,9 @@ semilogy(mean_LI,'Color',LI_color,'LineWidth',2)
 set(gca,'FontSize',20)
 box off
 hold on
-semilogy(mean_POD10,'Color',POD_color,'LineWidth',2)
+semilogy(mean_POD10,'--','Color',POD_color,'LineWidth',2)
 semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
-semilogy(mean_Sta,'LineWidth',2)
+%semilogy(mean_Sta,'LineWidth',2)
 
 legend('LIS','POD','OLR','State','Location','southwest')
 legend boxoff
@@ -312,9 +322,9 @@ semilogy(sqrt(d_f_LI),'Color',LI_color,'LineWidth',2)
 set(gca,'FontSize',20)
 box off
 hold on
-semilogy(sqrt(d_f_POD10),'Color',POD_color,'LineWidth',2)
+semilogy(sqrt(d_f_POD10),'--','Color',POD_color,'LineWidth',2)
 semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
-semilogy(sqrt(d_f_Sta),'LineWidth',2)
+%semilogy(sqrt(d_f_Sta),'LineWidth',2)
 title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
@@ -323,9 +333,9 @@ legend boxoff
 axis([1 10 1e-18 1])
 yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
 
-%set(gcf, 'Units', 'inches');
-%set(gcf, 'Position', [0.5 0.5 width height]);
-%set(gcf, 'PaperUnits', 'inches');
-%set(gcf, 'PaperSize', [width height]);
+set(gcf, 'Units', 'inches');
+set(gcf, 'Position', [0.5 0.5 width height]);
+set(gcf, 'PaperUnits', 'inches');
+set(gcf, 'PaperSize', [width height]);
 
-%exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');
+exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');

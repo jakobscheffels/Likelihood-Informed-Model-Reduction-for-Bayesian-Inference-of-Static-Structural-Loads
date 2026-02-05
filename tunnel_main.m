@@ -35,7 +35,7 @@ load Parameters.mat
 N_rep = 200;
 %% Setup inverse problem
 
-LIP_Setup();
+LIP_Setup({'gamma_obs'},{0.05^2});
 load LIP_Setup.mat C gamma_prior_f gamma_obs gamma_pos G m K mu_f S_pr 
 [~,~,omega]=svd((chol(gamma_obs,'lower')\G)*S_pr);
 V = S_pr*omega;
@@ -181,46 +181,59 @@ if run_POD_analysis
 end
 
 height= 8;
-alpha = 0.5;
+alpha = 0.25;
 LI_color = (1-alpha)*[0.4660 0.6740 0.1880]+alpha*[1 1 1];
 OLR_color = (1-alpha)*[0.8500 0.3250 0.0980]+alpha*[1 1 1];
-alpha=0.25;
+alpha=0.00;
 POD_color = (1-alpha)*[0.3010 0.7450 0.9330]+alpha*[1 1 1];
-%{
+
+%min_correct = mean(mean(log(abs(gamma_prior_f(1:2:end,1:2:end)))));
+
 figure
 t = tiledlayout(2,3, 'Padding', 'compact', 'TileSpacing', 'compact');
 
 % First plot
 ax1 = nexttile;
-imagesc(x_dofs,x_dofs,gamma_prior_f(1:2:end,1:2:end))
+imagesc(x_dofs,x_dofs,log(abs(gamma_prior_f(1:2:end,1:2:end))))
 axis equal tight;
 set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
 ylabel('z','Interpreter','latex')
-title("Prior covariance",'Interpreter','latex','FontSize',28)
+title("Prior covariance",'Interpreter','latex','FontSize',22)
+ax1.CLim=[min(min(log(abs(gamma_prior_f(1:2:end,1:2:end))))) log(max(max(abs(gamma_prior_f(1:2:end,1:2:end)))))];
+n = 256;
+cmap = [ ...
+    linspace(1,0,n)', ...   % R: 1 → 0
+    linspace(1,0,n)', ...   % G: 1 → 0
+    ones(n,1) ];           % B: stays 1
+
+colormap(cmap)
+colorbar
 
 ax2 = nexttile;
-imagesc(x_dofs,x_dofs,gamma_pos(1:2:end,1:2:end))
+imagesc(x_dofs,x_dofs,log(abs(gamma_pos(1:2:end,1:2:end))))
 axis equal tight;
 set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
-ax = gca;
-ax.CLim=[0 max(max(gamma_prior_f(1:2:end,1:2:end)))];
+%ax = gca;
+ax2.CLim=[min(min(log(abs(gamma_pos(1:2:end,1:2:end))))) log(max(max(abs(gamma_prior_f(1:2:end,1:2:end)))))];
+
+colormap(cmap)
 yticks([])
 %title('Analytical posterior covariance $\mathbf{\Gamma}_{\mathrm{pos}}$','Interpreter','latex','FontSize',18)
-title('Posterior covariance','Interpreter','latex','FontSize',28)
+title('Posterior covariance','Interpreter','latex','FontSize',22)
 
 ax3 = nexttile;
-imagesc(x_dofs,x_dofs,posCovLI(1:2:end,1:2:end))
+imagesc(x_dofs,x_dofs,log(abs(posCovLI(1:2:end,1:2:end))))
 axis equal tight;
 set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
-ax = gca;
-ax.CLim=[0 max(max(gamma_prior_f(1:2:end,1:2:end)))];
+ax3.CLim=[min(min(log(abs(gamma_pos(1:2:end,1:2:end))))) log(max(max(abs(gamma_prior_f(1:2:end,1:2:end)))))];
 yticks([])
 colorbar
-title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{LIS}}$','Interpreter','latex','FontSize',28)
+title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{LIS}}$','Interpreter','latex','FontSize',22)
 
+colormap(cmap)
 % Add colorbar below both plots using the first axes
 cb = colorbar(ax3, 'Location', 'eastoutside');
 
@@ -228,28 +241,29 @@ nexttile;
 axis off;
 
 ax5 = nexttile;
-imagesc(x_dofs,x_dofs,posCovOLR(1:2:end,1:2:end))
+imagesc(x_dofs,x_dofs,log(abs(posCovOLR(1:2:end,1:2:end))))
 axis equal tight;
 set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
 ylabel('z','Interpreter','latex')
-ax = gca;
-ax.CLim=[0 max(max(gamma_prior_f))];
+ax5.CLim=[min(min(log(abs(gamma_pos(1:2:end,1:2:end))))) log(max(max(abs(gamma_prior_f(1:2:end,1:2:end)))))];
 %yticks([])
 %colorbar
-title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{OLR}}$','Interpreter','latex','FontSize',28)
+title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{OLR}}$','Interpreter','latex','FontSize',22)
+
+colormap(cmap)
 
 ax6 = nexttile;
-imagesc(x_dofs,x_dofs,posCovPOD(1:2:end,1:2:end))
+imagesc(x_dofs,x_dofs,log(abs(posCovPOD(1:2:end,1:2:end))))
 axis equal tight;
 set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
-ax = gca;
-ax.CLim=[0 max(max(gamma_prior_f))];
+ax6.CLim=[min(min(log(abs(gamma_pos(1:2:end,1:2:end))))) log(max(max(abs(gamma_prior_f(1:2:end,1:2:end)))))];
 yticks([])
 colorbar
-title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{POD}}$','Interpreter','latex','FontSize',28)
+title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{POD}}$','Interpreter','latex','FontSize',22)
 
+colormap(cmap)
 
 set(gcf, 'Units', 'inches');
 set(gcf, 'Position', [.5 .5 width height]);
@@ -257,9 +271,9 @@ set(gcf, 'PaperUnits', 'inches');
 set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
 
-exportgraphics(gcf, 'priorTunnel.pdf', 'ContentType', 'vector');
-%}
-height = 6;
+exportgraphics(gcf, 'priorTunnelSat.pdf', 'ContentType', 'vector');
+
+height = 8;
 
 figure
 t = tiledlayout(1,2, 'Padding', 'compact', 'TileSpacing', 'compact');
@@ -269,9 +283,9 @@ semilogy(mean_LI,'Color',LI_color,'LineWidth',2)
 set(gca,'FontSize',20)
 box off
 hold on
-semilogy(mean_POD,'Color',POD_color,'LineWidth',2)
+semilogy(mean_POD,'--','Color',POD_color,'LineWidth',2)
 semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
-semilogy(mean_Sta,'LineWidth',2)
+%semilogy(mean_Sta,'LineWidth',2)
 
 legend('LIS','POD','OLR','State','Location','southwest')
 legend boxoff
@@ -286,9 +300,9 @@ semilogy(sqrt(d_f_LI),'Color',LI_color,'LineWidth',2)
 set(gca,'FontSize',20)
 box off
 hold on
-semilogy(sqrt(d_f_POD),'Color',POD_color,'LineWidth',2)
+semilogy(sqrt(d_f_POD),'--','Color',POD_color,'LineWidth',2)
 semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
-semilogy(sqrt(d_f_Sta),'LineWidth',2)
+%semilogy(sqrt(d_f_Sta),'LineWidth',2)
 title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
@@ -305,7 +319,31 @@ set(gcf, 'PaperPosition', [0 0 width height]);
 
 exportgraphics(gcf, 'posTunnel.pdf', 'ContentType', 'vector');
 
-theta=zeros(1,10);
-for i=1:10
-    theta(i)=1/(norm(V(:,i))*norm(W(:,i)));
-end
+
+
+fig=figure; 
+fig.Color=[.97 .97 .97];
+semilogy(mean_LI,'Color',LI_color,'LineWidth',2)
+set(gca,'FontSize',20,'color',[.97 .97 .97])
+box off
+hold on
+semilogy(mean_POD,'--','Color',POD_color,'LineWidth',2)
+semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
+axis([1 10 0.005 10])
+set(gcf,'InvertHardcopy','off')
+print(gcf,'tunnel_mean_9_gray_all.png','-dpng','-r300')
+
+fig=figure; 
+fig.Color=[.97 .97 .97];
+semilogy(sqrt(d_f_LI),'Color',LI_color,'LineWidth',2)
+set(gca,'FontSize',20,'color',[.97 .97 .97])
+
+box off
+hold on
+semilogy(sqrt(d_f_POD),'--','Color',POD_color,'LineWidth',2)
+semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
+axis([1 10 0.005 10])
+set(gcf,'InvertHardcopy','off')
+print(gcf,'tunnel_cov_9_gray_all.png','-dpng','-r300')
+
+

@@ -205,4 +205,93 @@ semilogy(sqrt(d_f_POD7),'--')
 axis([1 10 1e-18 1])
 yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
 
+alpha = 0.5;
+LI_color = (1-alpha)*[0.4660 0.6740 0.1880]+alpha*[1 1 1];
+OLR_color = (1-alpha)*[0.8500 0.3250 0.0980]+alpha*[1 1 1];
+alpha=0.25;
+POD_color = (1-alpha)*[0.3010 0.7450 0.9330]+alpha*[1 1 1];
 
+figure
+tiledlayout(2,3,"TileSpacing","compact","Padding","compact")
+nexttile;
+semilogy(mean_LI,'Color',LI_color,'LineWidth',2)
+set(gca,'FontSize',20)
+box off
+hold on
+semilogy(mean_POD,'Color',POD_color,'LineWidth',2)
+semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
+title("$\sigma_{obs}^2=1$",Interpreter="latex",FontSize=24)
+ylabel("Mean error",Interpreter="latex")
+xlabel("$r$",Interpreter="latex")
+axis([1 10 1e-15 100])
+yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
+legend('LIS','POD','OLR','Location','southwest')
+legend boxoff
+
+nexttile;
+semilogy(mean_LI4,'Color',LI_color,'LineWidth',2)
+set(gca,'FontSize',20)
+box off
+hold on
+semilogy(mean_POD4,'Color',POD_color,'LineWidth',2)
+semilogy(mean_OLR4,'o','Color',OLR_color,'LineWidth',2)
+title("$\sigma_{obs}^2=10^{-4}$",Interpreter="latex",FontSize=24)
+xlabel("$r$",Interpreter="latex")
+axis([1 10 1e-15 100])
+yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
+legend('LIS','POD','OLR','Location','southwest')
+legend boxoff
+
+nexttile;
+semilogy(mean_LI7,'Color',LI_color,'LineWidth',2)
+set(gca,'FontSize',20)
+box off
+hold on
+semilogy(mean_POD7,'Color',POD_color,'LineWidth',2)
+semilogy(mean_OLR7,'o','Color',OLR_color,'LineWidth',2)
+title("$\sigma_{obs}^2=10^{-7}$",Interpreter="latex",FontSize=24)
+xlabel("$r$",Interpreter="latex")
+axis([1 10 1e-15 100])
+yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
+legend('LIS','POD','OLR','Location','southwest')
+legend boxoff
+
+nexttile;
+semilogy(sqrt(d_f_LI),'Color',LI_color,'LineWidth',2)
+set(gca,'FontSize',20)
+box off
+hold on
+semilogy(sqrt(d_f_POD10),'Color',POD_color,'LineWidth',2)
+semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
+ylabel("Cov error",Interpreter="latex")
+xlabel("$r$",Interpreter="latex")
+axis([1 10 1e-15 100])
+yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
+legend('LIS','POD','OLR','Location','southwest')
+legend boxoff
+
+nexttile;
+semilogy(sqrt(d_f_LI4),'Color',LI_color,'LineWidth',2)
+set(gca,'FontSize',20)
+box off
+hold on
+semilogy(sqrt(d_f_POD4),'Color',POD_color,'LineWidth',2)
+semilogy(sqrt(d_f_OLR4),'o','Color',OLR_color,'LineWidth',2)
+xlabel("$r$",Interpreter="latex")
+axis([1 10 1e-15 100])
+yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
+legend('LIS','POD','OLR','Location','southwest')
+legend boxoff
+
+nexttile;
+semilogy(sqrt(d_f_LI7),'Color',LI_color,'LineWidth',2)
+set(gca,'FontSize',20)
+box off
+hold on
+semilogy(sqrt(d_f_POD7),'Color',POD_color,'LineWidth',2)
+semilogy(sqrt(d_f_OLR7),'o','Color',OLR_color,'LineWidth',2)
+xlabel("$r$",Interpreter="latex")
+axis([1 10 1e-15 100])
+yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
+legend('LIS','POD','OLR','Location','southwest')
+legend boxoff

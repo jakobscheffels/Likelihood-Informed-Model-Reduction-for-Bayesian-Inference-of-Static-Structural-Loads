@@ -34,9 +34,12 @@ mu_f_beam=mu_f;
 N_beam = state_samples;
 C_beam = C;
 
+S_obs=sqrt(gamma_obs);
+
 sigma_max_bar = zeros(1,10);
 sigma_max_beam = zeros(1,10);
 sigma_max_tun = zeros(1,10);
+sigma_max_hess = zeros(1,10);
 for i= 1:10
     [~,S,~]=svd(V_bar(:,1:i)*W_bar(:,1:i)');
     sigma_max_bar(i)=S(1,1);
