@@ -17,9 +17,22 @@ load('LIP_Setup.mat')
 %% Generalized eigenvectors / LIS basis
 %[~,~,omega]=svd((chol(gamma_obs,'lower')\G)*S_pr);
 %V = S_pr*omega;
-[~,V,W,V_State] = calculateLISBasis();
+[delta,V,W,V_State] = calculateLISBasis();
+
 %[~,state_samples]=gen_samples(100);
 %save LIS_Basis_Beam.mat V W K mu_f state_samples
+
+%% Auxiliary IP
+gamma = 1e3;
+W_1 = null(C,'r');
+L = C'/(C*C');
+gamma_obs_eta = gamma_obs(1,1).*eye(size(W_1,2));
+gamma_obs_tilde = L*gamma_obs*L'+gamma^2.*W_1*gamma_obs_eta*W_1';
+S_obs_tilde = sqrt(gamma_obs_tilde);
+[Omega,Delta,Nu]=svd((S_obs_tilde\(K\S_pr)));
+Delta=diag(Delta);
+V_tilde = S_obs_tilde*Omega;
+W_tilde = S_pr'\Nu;
 
 %% Mean samples
 N_rep = 200;
@@ -27,79 +40,23 @@ N_rep = 200;
 % Generate sample
 [~,state_sample]=gen_samples(N_rep);
 
-if run_POD_analysis
-    d_f_POD10 = zeros(1,m);
-    d_f_POD20 = zeros(1,m);
-    d_f_POD50 = zeros(1,m);
-    d_f_POD1000 = zeros(1,m);
 
-    %% Calculate POD basis
-    
-    [~,~,Phi10,~] = gen_samples(10);
-    [~,~,Phi20,~] = gen_samples(20);
-    [~,~,Phi50,~] = gen_samples(50);
-    [~,~,Phi1000,~] = gen_samples(1000);
-
-    for i=1:m
-        [~,G_POD_cell50{i},d_f_POD50(i)]=solveReducedModel(Phi50(:,1:i),Phi50(:,1:i));
-
-        [gamma_pos_POD,G_POD_cell10{i},d_f_POD10(i)]=solveReducedModel(Phi10(:,1:i),Phi10(:,1:i));
-        [~,G_POD_cell20{i},d_f_POD20(i)]=solveReducedModel(Phi20(:,1:i),Phi20(:,1:i));
-        [~,G_POD_cell1000{i},d_f_POD1000(i)]=solveReducedModel(Phi1000(:,1:i),Phi1000(:,1:i));
-  
-    end
-
-    error_POD10 = zeros(N_rep,m);
-    error_POD20 = zeros(N_rep,m);
-    error_POD50 = zeros(N_rep,m);
-    error_POD1000 = zeros(N_rep,m);
-
-    for j=1:N_rep
-        ysam = C*state_sample(:,j)+sqrt(gamma_obs)*randn(m,1);
-        % Full model mean
-        mu_full = meanCalculation(G,ysam);
-        mu_full_norm = norm(mu_full);
-    
-        for i = 1:m
-    
-            % POD approximation
-            mu_POD50 = meanCalculation(G_POD_cell50{i},ysam);
-            mu_POD10 = meanCalculation(G_POD_cell10{i},ysam);
-            mu_POD20 = meanCalculation(G_POD_cell20{i},ysam);
-            mu_POD1000 = meanCalculation(G_POD_cell1000{i},ysam);
-  
-  
-            error_POD50(j,i) = norm(mu_full-mu_POD50)/mu_full_norm;
-    
-            error_POD10(j,i) = norm(mu_full-mu_POD10)/mu_full_norm;
-            error_POD20(j,i) = norm(mu_full-mu_POD20)/mu_full_norm;
-            error_POD1000(j,i) = norm(mu_full-mu_POD1000)/mu_full_norm;
-        end
-        
-    end    
-    mean_POD10 = mean(error_POD10,1);
-    mean_POD20 = mean(error_POD20,1);
-    mean_POD50 = mean(error_POD50,1);
-    mean_POD1000 = mean(error_POD1000,1);
-    
-else 
-
-    %% Calculate POD basis using 50 samples
-    [~,~,Phi,~] = gen_samples(10);
-    d_f_POD10=zeros(1,m);
-    error_POD10 = zeros(N_rep,m);
-
-end
+%% Calculate POD basis using 50 samples
+[~,~,Phi,~] = gen_samples(10);
+d_f_POD10=zeros(1,m);
+error_POD10 = zeros(N_rep,m);
 
 d_f_LI=zeros(1,m);
 d_f_OLR=zeros(1,m);
 d_f_Sta=zeros(1,m);
+d_f_IP = zeros(1,m);
 
 for i=1:m
 
     %% LIS reduced operator
     [gamma_pos_LI,G_LI_cell{i},d_f_LI(i)]=solveReducedModel(V(:,1:i),W(:,1:i));
     [gamma_pos_Sta,G_Sta_cell{i},d_f_Sta(i)]=solveReducedModel(V_State(:,1:i),W(:,1:i));
+    [gamma_pos_IP,G_IP_cell{i},d_f_IP(i)]=solveReducedModel(V_tilde(:,1:i),W_tilde(:,1:i));
     
     %% POD reduced operator
     if ~run_POD_analysis
@@ -123,6 +80,7 @@ end
 error_LI = zeros(N_rep,m);
 error_OLR = zeros(N_rep,m);
 error_Sta = zeros(N_rep,m);
+error_IP = zeros(N_rep,m);
 
 mu_tilde = meanCalculation(G,zeros(m,1));
 
@@ -136,6 +94,7 @@ for j=1:N_rep
         % LIS approximation
         mu_LIS = meanCalculation(G_LI_cell{i},ysam);
         mu_Sta = meanCalculation(G_Sta_cell{i},ysam);
+        mu_IP = meanCalculation(G_IP_cell{i},ysam);
 
         % POD approximation
         if ~run_POD_analysis
@@ -149,6 +108,7 @@ for j=1:N_rep
         error_LI(j,i) = norm(mu_full-mu_LIS)/mu_full_norm;
         error_OLR(j,i) = norm(mu_full-mu_Sp_3)/mu_full_norm;
         error_Sta(j,i) = norm(mu_full-mu_Sta)/mu_full_norm;
+        error_IP(j,i) = norm(mu_full-mu_IP)/mu_full_norm;
     end
     
 end
@@ -160,6 +120,7 @@ end
 mean_OLR = mean(error_OLR,1);
 
 mean_Sta = mean(error_Sta,1);
+mean_IP = mean(error_IP,1);
 
 %% PLOTS
 
@@ -211,7 +172,7 @@ if run_POD_analysis
     set(gcf, 'PaperPosition', [0 0 width height]);
     exportgraphics(gcf, 'PODBar.pdf', 'ContentType', 'vector');
 end
-
+%{
 figure
 t = tiledlayout(2,3, 'Padding', 'compact', 'TileSpacing', 'compact');
 
@@ -290,7 +251,7 @@ set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
 
 exportgraphics(gcf, 'priorBar.pdf', 'ContentType', 'vector');
-
+%}
 height = 6;
 alpha = 0.25;
 LI_color = (1-alpha)*[0.4660 0.6740 0.1880]+alpha*[1 1 1];
@@ -308,9 +269,9 @@ box off
 hold on
 semilogy(mean_POD10,'--','Color',POD_color,'LineWidth',2)
 semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
-%semilogy(mean_Sta,'LineWidth',2)
-
-legend('LIS','POD','OLR','State','Location','southwest')
+semilogy(mean_Sta,'LineWidth',2)
+semilogy(mean_IP,'r','LineWidth',2)
+legend('LIS','POD','OLR','State','IP','Location','southwest')
 legend boxoff
 title('Relative posterior mean error','Interpreter','latex','FontSize',28)
 axis([1 10 1e-18 1])
@@ -325,11 +286,12 @@ box off
 hold on
 semilogy(sqrt(d_f_POD10),'--','Color',POD_color,'LineWidth',2)
 semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
-%semilogy(sqrt(d_f_Sta),'LineWidth',2)
+semilogy(sqrt(d_f_Sta),'LineWidth',2)
+semilogy(sqrt(d_f_IP),'r','LineWidth',2)
 title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
-legend('LIS','POD','OLR','State','Location','southwest')
+legend('LIS','POD','OLR','State','IP','Location','southwest')
 legend boxoff
 axis([1 10 1e-18 1])
 yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
@@ -339,4 +301,11 @@ set(gcf, 'Position', [0.5 0.5 width height]);
 set(gcf, 'PaperUnits', 'inches');
 set(gcf, 'PaperSize', [width height]);
 
-exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');
+figure
+semilogy(Delta,'LineWidth',2)
+hold on
+semilogy(delta,'LineWidth',2)
+title("Singular values","Interpreter","latex","FontSize",22)
+legend("$\widetilde{\Delta}$","$\Delta$","Interpreter","latex")
+
+%exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');
