@@ -187,6 +187,21 @@ OLR_color = (1-alpha)*[0.8500 0.3250 0.0980]+alpha*[1 1 1];
 alpha=0.00;
 POD_color = (1-alpha)*[0.3010 0.7450 0.9330]+alpha*[1 1 1];
 
+n = 256;
+vmin = 0;
+v1   = 28;   % white → blue transition end
+vmax = 32;  % blue → red transition end
+anchors = ([vmin v1 vmax] - vmin) / (vmax - vmin);
+c1 = [1 1 1];   % white
+c2 = [0 0 1];   % blue
+c3 = [1 0 0];   % red
+
+n = 256;
+x = linspace(0,1,n);
+
+cmap = interp1(anchors, [c1; c2; c3], x, 'linear');
+
+
 %min_correct = mean(mean(log(abs(gamma_prior_f(1:2:end,1:2:end)))));
 
 figure
@@ -200,15 +215,12 @@ set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
 ylabel('z','Interpreter','latex')
 title("Prior covariance",'Interpreter','latex','FontSize',22)
-ax1.CLim=[min(min(log(abs(gamma_prior_f(1:2:end,1:2:end))))) log(max(max(abs(gamma_prior_f(1:2:end,1:2:end)))))];
-n = 256;
-cmap = [ ...
-    linspace(1,0,n)', ...   % R: 1 → 0
-    linspace(1,0,n)', ...   % G: 1 → 0
-    ones(n,1) ];           % B: stays 1
+ax1.CLim=[0 glob_max];
 
 colormap(cmap)
-colorbar
+cb1=colorbar;
+cb1.Limits=[min(min(log(abs(gamma_prior_f(1:2:end,1:2:end))))) glob_max];
+%cb1.ticks([28 32])
 
 ax2 = nexttile;
 imagesc(x_dofs,x_dofs,log(abs(gamma_pos(1:2:end,1:2:end))))
@@ -216,7 +228,7 @@ axis equal tight;
 set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
 %ax = gca;
-ax2.CLim=[min(min(log(abs(gamma_pos(1:2:end,1:2:end))))) log(max(max(abs(gamma_prior_f(1:2:end,1:2:end)))))];
+ax2.CLim=[0 glob_max];
 
 colormap(cmap)
 yticks([])
@@ -228,7 +240,7 @@ imagesc(x_dofs,x_dofs,log(abs(posCovLI(1:2:end,1:2:end))))
 axis equal tight;
 set(gca,'FontSize',20)
 xlabel('z','Interpreter','latex')
-ax3.CLim=[min(min(log(abs(gamma_pos(1:2:end,1:2:end))))) log(max(max(abs(gamma_prior_f(1:2:end,1:2:end)))))];
+ax3.CLim=[0 glob_max];
 yticks([])
 colorbar
 title('Approximation $\mathbf{\Gamma}_{\mathrm{pos}}^{\mathrm{LIS}}$','Interpreter','latex','FontSize',22)

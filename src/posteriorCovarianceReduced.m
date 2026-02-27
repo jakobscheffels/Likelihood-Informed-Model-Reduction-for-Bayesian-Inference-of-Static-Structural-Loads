@@ -22,7 +22,8 @@ function df = foerstnerDistance(gamma1)
     % Calculate cholesky factor of projected covariances
     L = chol(W'*gamma1*W,'lower');
     R = chol(W'*gamma_pos*W,'lower');
-    
+    %L = chol(gamma1,'lower');
+    %R = chol(gamma_pos,'lower');
     % Solve for generalized eigenvalues
     df=gen_eigenvalue(L,R);
     df(abs(df)<eps)=[];

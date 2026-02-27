@@ -3,7 +3,7 @@ clearvars
 addpath src\
 %% Parameters of the problem
 rng(25);
-run_POD_analysis = false; % set 'true' if want to run POD analysis
+run_POD_analysis = true; % set 'true' if want to run POD analysis
 
 %% Setup of the problem
 Parameters({'beam_bool'},{false});
@@ -63,10 +63,10 @@ if run_POD_analysis
         for i = 1:m
     
             % POD approximation
-            mu_POD50 = meanCalculation(G_POD_cell50{i},ysam);
-            mu_POD10 = meanCalculation(G_POD_cell10{i},ysam);
-            mu_POD20 = meanCalculation(G_POD_cell20{i},ysam);
-            mu_POD1000 = meanCalculation(G_POD_cell1000{i},ysam);
+            mu_POD50 = meanCalculationPOD(G_POD_cell50{i},ysam,Phi50(:,1:i));
+            mu_POD10 = meanCalculationPOD(G_POD_cell10{i},ysam,Phi10(:,1:i));
+            mu_POD20 = meanCalculationPOD(G_POD_cell20{i},ysam,Phi20(:,1:i));
+            mu_POD1000 = meanCalculationPOD(G_POD_cell1000{i},ysam,Phi1000(:,1:i));
   
   
             error_POD50(j,i) = norm(mu_full-mu_POD50)/mu_full_norm;
@@ -109,9 +109,9 @@ for i=1:m
     %% Spantini Reduction
     [gamma_pos_OLR,G_OLR_cell{i},d_f_OLR(i)]=solveOLRA(V(:,1:i),W(:,1:i));
     
-    gamma_prior_red = Phi(:,1:i)'*gamma_prior_f*Phi(:,1:i);
-    G_red = C*Phi(:,1:i)*inv(Phi(:,1:i)'*K*Phi(:,1:i));
-    gamma_pos_red = gamma_prior_red-gamma_prior_red*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*gamma_prior_red;
+    %gamma_prior_red = Phi(:,1:i)'*gamma_prior_f*Phi(:,1:i);
+    %G_red = C*Phi(:,1:i)*inv(Phi(:,1:i)'*K*Phi(:,1:i));
+    %gamma_pos_red = gamma_prior_red-gamma_prior_red*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*gamma_prior_red;
     %gamma_pos_PO = gamma_prior_f-Phi(:,1:i)*gamma_prior_red*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*gamma_prior_red*Phi(:,1:i)';
     %gamma_pos_PO2 = gamma_prior_f-gamma_prior_f*Phi(:,1:i)*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*Phi(:,1:i)'*gamma_prior_f;
     %d_f_POD2(i)=foerstnerDistance(gamma_pos_PO);
@@ -139,7 +139,7 @@ for j=1:N_rep
 
         % POD approximation
         if ~run_POD_analysis
-            mu_POD = meanCalculation(G_POD_cell10{i},ysam);
+            mu_POD = meanCalculationPOD(G_POD_cell10{i},ysam,Phi(:,1:i));
             error_POD10(j,i) = norm(mu_full-mu_POD)/mu_full_norm;
         end
 
@@ -310,7 +310,7 @@ semilogy(mean_POD10,'--','Color',POD_color,'LineWidth',2)
 semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
 %semilogy(mean_Sta,'LineWidth',2)
 
-legend('LIS','POD','OLR','State','Location','southwest')
+legend('LIS','POD','OLR','Location','southwest')
 legend boxoff
 title('Relative posterior mean error','Interpreter','latex','FontSize',28)
 axis([1 10 1e-18 1])
@@ -329,7 +329,7 @@ semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
 title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
-legend('LIS','POD','OLR','State','Location','southwest')
+legend('LIS','POD','OLR','Location','southwest')
 legend boxoff
 axis([1 10 1e-18 1])
 yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
