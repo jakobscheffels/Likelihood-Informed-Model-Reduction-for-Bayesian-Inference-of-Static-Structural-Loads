@@ -23,17 +23,8 @@ load('LIP_Setup.mat')
 %save LIS_Basis_Beam.mat V W K mu_f state_samples
 
 %% Auxiliary IP
-gamma = 1e7;
-W_1 = null(C,'r');
-L = C'/(C*C');
-gamma_obs_eta = gamma_obs(1,1).*eye(size(W_1,2));
-gamma_obs_tilde = L*gamma_obs*L'+gamma^2.*W_1*gamma_obs_eta*W_1';
-S_obs_tilde = sqrt(gamma_obs_tilde);
-[Omega,Delta,Nu]=svd((S_obs_tilde\(K\S_pr)));
-Delta=diag(Delta);
-V_tilde = S_obs_tilde*Omega;
-W_tilde = (K'\(S_obs_tilde'\Omega(:,1:100)))./Delta';
 [d,V_tilde,W_tilde]=calculateLISBasisIP();
+
 %% Mean samples
 N_rep = 200;
 
