@@ -39,7 +39,6 @@ function Parameters(inputName, inputVal)
     
     % Boolean to use tunnel segments
     tunnel = false;
-    k_vector = zeros(nnode,1);
     zeta = 1/7;
     t = 0.35;
     % set Parameters
@@ -85,6 +84,27 @@ function Parameters(inputName, inputVal)
             end
         end
     end
+    if tunnel
+        nele = 800;
+        nnode = nele+1;
+        L = 200;
+        E = 35e9;
+        D = 6.2;
+        nele = 800;
+        
+        BC_dofs=[];
+        theta = L/2;
+        mu_q = 300e5;
+        delta_q = 1;
+        sigma_q = mu_q*delta_q;
+    end
+
+    k1=33000e3;
+    k2=5000e3;
+
+    k_vector = zeros(nele+1,1);
+    k_vector(1:nele/2)=k1.*ones(nele/2,1);
+    k_vector(nele/2+1:end)=k2.*ones(nele/2+1,1);
     
     l=L/nele;
     x_dofs=0:l:L;
