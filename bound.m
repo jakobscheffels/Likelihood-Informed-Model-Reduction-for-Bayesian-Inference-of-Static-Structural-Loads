@@ -4,8 +4,8 @@ addpath src\
 %% Parameters of the problem
 rng(25);
 
-beam_bool = true;
-tunnel = true;
+beam_bool = false;
+tunnel = false;
 
 Parameters({'beam_bool','tunnel'},...
     {beam_bool,tunnel});
@@ -44,7 +44,10 @@ LIS_boundSep = zeros(1,m);
 
 % Constant
 C_bound = zeros(1,m);
+C_boundOLR = zeros(1,m);
 HessErr = zeros(1,m);
+HessErrOLR = zeros(1,m);
+OLR_bound = eps.*ones(1,m);
 
 for i=1:m
 
@@ -71,21 +74,32 @@ for i=1:m
     R = Omega(:,1:i)'*(S_obs'\C)*S_pr*Nu(:,1:i);
     R_bound(i)=norm((Omega(:,1:i)-(S_obs\C)*S_pr*(Nu(:,1:i)/R))*diag(delta(1:i)),2);
     R_boundSep(i)=norm((Omega(:,1:i)-(S_obs\C)*S_pr*(Nu(:,1:i)/R)),2);
+    
+    HessErrOLR(i)=norm((S_obs\(G-G_OLR_cell{i}))*S_pr,2);
+
 
     G_hat=C*V(:,1:i)*((W(:,1:i)'*K*V(:,1:i))\W(:,1:i)');
     HessErr(i)=norm((S_obs\(G-G_hat))*S_pr,2);
     
     preHess = (S_obs\G)*S_pr;
     preHessAp = (S_obs\G_hat)*S_pr;
+    preHessOLR = (S_obs\G_hat)*S_pr;
     norm_hess = norm(preHess,2);
     norm_hess_ap = norm(preHessAp,2);
+    norm_hess_OLR = norm(preHessOLR,2);
+
     C_bound(i) = norm(S_pr,2)^2*(norm((eye(m)+preHess*preHess')\preHess,2)+ ...
     norm_hess_ap*norm_hess*(norm_hess_ap+norm_hess) ...
     +norm((eye(m)+preHessAp*preHessAp')\preHessAp,2));
+    C_boundOLR(i) = norm(S_pr,2)^2*(norm((eye(m)+preHess*preHess')\preHess,2)+ ...
+    norm_hess_OLR*norm_hess*(norm_hess_OLR+norm_hess) ...
+    +norm((eye(m)+preHessOLR*preHessOLR')\preHessOLR,2));
 
     if i< m
         LIS_bound(i)=delta(i+1)+R_bound(i);
         LIS_boundSep(i)=delta(i+1)+R_boundSep(i)*delta(1);
+
+        OLR_bound(i)=delta(i+1);
     else
         LIS_bound(i)=eps;
         LIS_boundSep(i)=eps;
@@ -103,10 +117,12 @@ set(gca,"FontSize",20)
 hold on
 semilogy(LIS_boundSep,"--","LineWidth",2)
 semilogy(HessErr,"LineWidth",2)
+semilogy(OLR_bound,'x',"MarkerSize",6,"LineWidth",1.5)
+semilogy(HessErrOLR,"o","MarkerSize",6,"LineWidth",1.5)
 xlabel("r","Interpreter","latex")
 title("$\Vert S_{obs}^{-1}(G-\widehat{G})S \Vert_p\le\delta_{r+1}+\Vert(\Omega_r-S_{obs}^{-1}CS\bar{\nu}_rR_r^{-1})\Delta_r\Vert_p$","Interpreter","latex")
 axis([1 10 eps 1e2])
-legend("Joint","Separate","Actual","Interpreter","latex","Location","southwest")
+legend("Joint","Separate","Actual","OLR Bound","OLR error","Interpreter","latex","Location","southwest")
 
 nexttile;
 semilogy(C_bound.*LIS_bound,"LineWidth",2)
@@ -114,10 +130,12 @@ set(gca,"FontSize",20)
 hold on
 semilogy(C_bound.*LIS_boundSep,"--","LineWidth",2)
 semilogy(p_LI,"LineWidth",2)
+semilogy(C_boundOLR.*OLR_bound,"x","MarkerSize",6,"LineWidth",1.5)
+semilogy(p_OLR,"o","MarkerSize",6,"LineWidth",1.5)
 xlabel("r","Interpreter","latex")
 title("Posterior covariance error for Bar problem","Interpreter","latex")
-legend("Joint","Separate","Actual","Location","southwest","Interpreter","Latex")
-axis([1 10 1e0 1e15])
+legend("Joint","Separate","Actual","OLR Bound","OLR error","Location","southwest","Interpreter","Latex")
+axis([1 10 1e-5 1e15])
 
 
 figure
