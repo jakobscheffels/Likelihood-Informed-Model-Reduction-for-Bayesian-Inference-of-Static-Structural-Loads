@@ -14,8 +14,8 @@ load Parameters.mat
 %% Setup inverse problem
 x_dofs=applyBoundaryCondition(x_dofs,BC_dofs,'Coordinate');
 
-LIP_Setup({'gamma_obs'},{0.05^2});
-load LIP_Setup.mat
+%LIP_Setup({'gamma_obs'},{0.05^2});
+%load LIP_Setup.mat
 
 LIP_Setup({'gamma_obs'},{0.001^2});
 load('LIP_Setup.mat')
@@ -27,17 +27,18 @@ S_obs = chol(gamma_obs,'lower');
 %[~,state_samples]=gen_samples(100);
 
 %% Calculate POD basis using 50 samples
-[~,~,Phi,~] = gen_samples(10);
-d_f_POD10=zeros(1,m);
+%[~,~,Phi,~] = gen_samples(10);
+%d_f_POD10=zeros(1,m);
 
 d_f_LI=zeros(1,m);
 d_f_OLR=zeros(1,m);
 d_f_Sta=zeros(1,m);
 p_LI=zeros(1,m);
 p_OLR=zeros(1,m);
-p_POD=zeros(1,m);
+%p_POD=zeros(1,m);
 
 R_bound=zeros(1,m);
+R_bound_new=zeros(1,m);
 R_boundSep=zeros(1,m);
 LIS_bound = zeros(1,m);
 LIS_boundSep = zeros(1,m);
@@ -56,25 +57,18 @@ for i=1:m
     
     p_LI(i)=norm(gamma_pos-gamma_pos_LI,2);
 
-    %% POD reduced operator
-    [gamma_pos_POD,G_POD_cell10{i},d_f_POD10(i)]=solveReducedModel(Phi(:,1:i),Phi(:,1:i));
-    p_POD(i)=norm(gamma_pos-gamma_pos_POD,2);
+    
     
     %% Spantini Reduction
     [gamma_pos_OLR,G_OLR_cell{i},d_f_OLR(i)]=solveOLRA(V(:,1:i),W(:,1:i));
     p_OLR(i)=norm(gamma_pos-gamma_pos_OLR,2);
-    %gamma_prior_red = Phi(:,1:i)'*gamma_prior_f*Phi(:,1:i);
-    %G_red = C*Phi(:,1:i)*inv(Phi(:,1:i)'*K*Phi(:,1:i));
-    %gamma_pos_red = gamma_prior_red-gamma_prior_red*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*gamma_prior_red;
-    %gamma_pos_PO = gamma_prior_f-Phi(:,1:i)*gamma_prior_red*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*gamma_prior_red*Phi(:,1:i)';
-    %gamma_pos_PO2 = gamma_prior_f-gamma_prior_f*Phi(:,1:i)*G_red'*((G_red*gamma_prior_red*G_red'+gamma_obs)\G_red)*Phi(:,1:i)'*gamma_prior_f;
-    %d_f_POD2(i)=foerstnerDistance(gamma_pos_PO);
+ 
 
     %% LIS bound
     R = Omega(:,1:i)'*(S_obs'\C)*S_pr*Nu(:,1:i);
     R_bound(i)=norm((Omega(:,1:i)-(S_obs\C)*S_pr*(Nu(:,1:i)/R))*diag(delta(1:i)),2);
     R_boundSep(i)=norm((Omega(:,1:i)-(S_obs\C)*S_pr*(Nu(:,1:i)/R)),2);
-    
+    R_bound_new(i)=norm(Omega(:,i+1:end)'*(S_obs\C)*S_pr*Nu(:,1:i)*(R\(diag(delta(1:i)))),2);
     HessErrOLR(i)=norm((S_obs\(G-G_OLR_cell{i}))*S_pr,2);
 
 
@@ -153,7 +147,8 @@ semilogy(R_bound,"LineWidth",2)
 set(gca,"FontSize",20)
 hold on
 semilogy(R_boundSep.*delta(1),"--","LineWidth",2)
+semilogy(R_bound_new,"x","MarkerSize",6,"LineWidth",1.5)
 title("$\Vert (\Omega_r-S_{obs}^{-1}CS\bar{\nu}_rR_r^{-1})\Delta_r\Vert_p$","Interpreter","latex")
 axis([1 10 eps 1e2])
 xlabel("r","Interpreter","latex")
-legend("Joint","Separate","Interpreter","latex","Location","southwest")
+legend("Joint","Separate","New","Interpreter","latex","Location","southwest")
