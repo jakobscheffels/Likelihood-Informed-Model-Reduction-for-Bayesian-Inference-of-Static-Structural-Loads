@@ -14,10 +14,12 @@ load Parameters.mat
 %% Setup inverse problem
 x_dofs=applyBoundaryCondition(x_dofs,BC_dofs,'Coordinate');
 
-%LIP_Setup({'gamma_obs'},{0.05^2});
-%load LIP_Setup.mat
+if tunnel
+    LIP_Setup({'gamma_obs'},{0.05^2});
+else
+    LIP_Setup({'gamma_obs'},{0.001^2});
+end
 
-LIP_Setup({'gamma_obs'},{0.001^2});
 load('LIP_Setup.mat')
 S_obs = chol(gamma_obs,'lower');
 %% Generalized eigenvectors / LIS basis
