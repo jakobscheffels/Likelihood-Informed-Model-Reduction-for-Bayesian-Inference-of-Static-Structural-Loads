@@ -124,8 +124,8 @@ for i=1:m
     %% POD reduced operator
     if ~run_POD_analysis
         [gamma_pos_POD,G_POD_cell10{i},d_f_POD10(i)]=solveReducedModel(Phi(:,1:i),Phi(:,1:i));
-        [~,~,d_f_POD_adj(i)]=solveReducedModel(Phi(:,1:i),W_adj(:,1:i));
-        [~,~,d_f_POD_noise(i)]=solveReducedModel(Phi(:,1:i),W_noise(:,1:i));
+        [~,G_POD_adj{i},d_f_POD_adj(i)]=solveReducedModel(Phi(:,1:i),W_adj(:,1:i));
+        [~,G_POD_noise{i},d_f_POD_noise(i)]=solveReducedModel(Phi(:,1:i),W_noise(:,1:i));
     end
 
     %% Spantini Reduction
@@ -146,6 +146,9 @@ error_LI = zeros(N_rep,m);
 error_OLR = zeros(N_rep,m);
 error_Sta = zeros(N_rep,m);
 
+error_adj = zeros(N_rep,m);
+error_noise = zeros(N_rep,m);
+
 mu_tilde = meanCalculation(G,zeros(m,1));
 
 for j=1:N_rep
@@ -163,6 +166,10 @@ for j=1:N_rep
         if ~run_POD_analysis
             mu_POD = meanCalculationPOD(G_POD_cell10{i},ysam,Phi(:,1:i));
             error_POD10(j,i) = norm(mu_full-mu_POD)/mu_full_norm;
+            mu_POD = meanCalculation(G_POD_adj{i},ysam);
+            error_adj(j,i) = norm(mu_full-mu_POD)/mu_full_norm;
+            mu_POD = meanCalculation(G_POD_noise{i},ysam);
+            error_noise(j,i) = norm(mu_full-mu_POD)/mu_full_norm;
         end
 
         % Spantini approximation
@@ -171,6 +178,7 @@ for j=1:N_rep
         error_LI(j,i) = norm(mu_full-mu_LIS)/mu_full_norm;
         error_OLR(j,i) = norm(mu_full-mu_Sp_3)/mu_full_norm;
         error_Sta(j,i) = norm(mu_full-mu_Sta)/mu_full_norm;
+        
     end
     
 end
@@ -182,6 +190,9 @@ end
 mean_OLR = mean(error_OLR,1);
 
 mean_Sta = mean(error_Sta,1);
+
+mean_POD_adj = mean(error_adj,1);
+mean_POD_noise = mean(error_noise,1);
 
 %% PLOTS
 
@@ -330,9 +341,11 @@ box off
 hold on
 semilogy(mean_POD10,'--','Color',POD_color,'LineWidth',2)
 semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
+semilogy(mean_POD_adj,"LineWidth",2)
+semilogy(mean_POD_noise,"LineWidth",2)
 %semilogy(mean_Sta,'LineWidth',2)
 
-legend('LIS','POD','OLR','Location','southwest')
+legend('LIS','POD','OLR',"adjoint","noise",'Location','southwest')
 legend boxoff
 title('Relative posterior mean error','Interpreter','latex','FontSize',28)
 axis([1 10 1e-18 1])
