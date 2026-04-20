@@ -3,7 +3,7 @@ clearvars
 addpath src\
 %% Parameters of the problem
 rng(25);
-run_POD_analysis = true; % set 'true' if want to run POD analysis
+run_POD_analysis = false; % set 'true' if want to run POD analysis
 
 %% Setup of the problem
 Parameters({'beam_bool'},{false});
@@ -22,7 +22,7 @@ load('LIP_Setup.mat')
 %save LIS_Basis_Beam.mat V W K mu_f state_samples
 
 %% Mean samples
-N_rep = 200;
+N_rep = 2;
 
 % Generate sample
 [~,state_sample]=gen_samples(N_rep);
@@ -91,9 +91,29 @@ else
 
 end
 
+%% Adjoint 
+P = zeros(nele,m);
+P_noise = zeros(nele,20);
+for i=1:20
+    z = zeros(m,1);
+    if i<m+1
+        z(i)=1;
+        p = K\(C'*z);
+        P(:,i)=p;
+    end
+    z = sqrt(gamma_obs(1,1))*randn(m,1);
+    p = K\(C'*z);
+    P_noise (:,i)=p;
+end
+[psi,~,~]=svd(P);
+W_adj = psi(:,1:m);
+[W_noise,~,~]=svd(P_noise);
+
 d_f_LI=zeros(1,m);
 d_f_OLR=zeros(1,m);
 d_f_Sta=zeros(1,m);
+d_f_POD_adj = zeros(1,m);
+d_f_POD_noise = zeros(1,m);
 
 for i=1:m
 
@@ -104,6 +124,8 @@ for i=1:m
     %% POD reduced operator
     if ~run_POD_analysis
         [gamma_pos_POD,G_POD_cell10{i},d_f_POD10(i)]=solveReducedModel(Phi(:,1:i),Phi(:,1:i));
+        [~,~,d_f_POD_adj(i)]=solveReducedModel(Phi(:,1:i),W_adj(:,1:i));
+        [~,~,d_f_POD_noise(i)]=solveReducedModel(Phi(:,1:i),W_noise(:,1:i));
     end
 
     %% Spantini Reduction
@@ -289,7 +311,7 @@ set(gcf, 'PaperUnits', 'inches');
 set(gcf, 'PaperSize', [width height]);
 set(gcf, 'PaperPosition', [0 0 width height]);
 
-exportgraphics(gcf, 'priorBar.pdf', 'ContentType', 'vector');
+%exportgraphics(gcf, 'priorBar.pdf', 'ContentType', 'vector');
 
 height = 6;
 alpha = 0.25;
@@ -325,11 +347,13 @@ box off
 hold on
 semilogy(sqrt(d_f_POD10),'--','Color',POD_color,'LineWidth',2)
 semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
+semilogy(sqrt(d_f_POD_adj),"LineWidth",2)
+semilogy(sqrt(d_f_POD_noise),"LineWidth",2)
 %semilogy(sqrt(d_f_Sta),'LineWidth',2)
 title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
-legend('LIS','POD','OLR','Location','southwest')
+legend('LIS','POD','OLR',"Adjoint", "Adj noise",'Location','southwest')
 legend boxoff
 axis([1 10 1e-18 1])
 yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
@@ -339,4 +363,4 @@ set(gcf, 'Position', [0.5 0.5 width height]);
 set(gcf, 'PaperUnits', 'inches');
 set(gcf, 'PaperSize', [width height]);
 
-exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');
+%exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');

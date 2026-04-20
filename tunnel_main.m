@@ -288,11 +288,11 @@ exportgraphics(gcf, 'priorTunnelSat.pdf', 'ContentType', 'vector');
 height = 8;
 
 figure
-t = tiledlayout(1,2, 'Padding', 'compact', 'TileSpacing', 'compact');
+%t = tiledlayout(1,2, 'Padding', 'compact', 'TileSpacing', 'compact');
 
-ax1 = nexttile;
+%ax1 = nexttile;
 semilogy(mean_LI,'Color',LI_color,'LineWidth',2)
-set(gca,'FontSize',20)
+set(gca,'FontSize',24)
 box off
 hold on
 semilogy(mean_POD,'--','Color',POD_color,'LineWidth',2)
@@ -301,21 +301,22 @@ semilogy(mean_OLR,'o','Color',OLR_color,'LineWidth',2)
 
 legend('LIS','POD','OLR','State','Location','southwest')
 legend boxoff
-title('Relative posterior mean error','Interpreter','latex','FontSize',28)
+title('Relative posterior mean error','Interpreter','latex','FontSize',36)
 axis([1 10 1e-15 100])
 yticks([10^(-15) 10^(-10) 10^(-5) 10^0])
 xlabel('Approximation rank $r$','Interpreter','latex')
 
 % Second plot
 ax = nexttile;
+figure
 semilogy(sqrt(d_f_LI),'Color',LI_color,'LineWidth',2)
-set(gca,'FontSize',20)
+set(gca,'FontSize',24)
 box off
 hold on
 semilogy(sqrt(d_f_POD),'--','Color',POD_color,'LineWidth',2)
 semilogy(sqrt(d_f_OLR),'o','Color',OLR_color,'LineWidth',2)
 %semilogy(sqrt(d_f_Sta),'LineWidth',2)
-title('F$\ddot{o}$rstner posterior covariance error','Interpreter','latex','FontSize',28)
+title('Posterior covariance error','Interpreter','latex','FontSize',36)
 %ylabel('F$\ddot{o}$rstner distance','Interpreter','latex')
 xlabel('Approximation rank $r$','Interpreter','latex')
 legend('LIS','POD','OLR','State','Location','southwest')

@@ -176,6 +176,17 @@ mean_OLR = mean(error_OLR,1);
 
 
 %% Plots
+%{
+figure
+semilogy(C_bound.*LIS_bound,"LineWidth",2)
+set(gca,"FontSize",20)
+hold on
+semilogy(p_LI,"LineWidth",2)
+xlabel("Regarded Degrees of Freedom","Interpreter","latex")
+ylabel("Error","Interpreter","latex")
+title("Error bound and actual error","Interpreter","latex")
+legend("Bound","Actual error","Interpreter","latex","Location","southwest")
+%}
 
 figure
 t = tiledlayout(1,2, 'Padding', 'compact', 'TileSpacing', 'compact');
