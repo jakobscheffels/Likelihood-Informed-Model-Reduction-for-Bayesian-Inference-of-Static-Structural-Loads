@@ -377,3 +377,39 @@ set(gcf, 'PaperUnits', 'inches');
 set(gcf, 'PaperSize', [width height]);
 
 %exportgraphics(gcf, 'posBar.pdf', 'ContentType', 'vector');
+
+
+%% Adjoint State Plots
+scal = max(abs(V_State(:,1)));
+scal_adj =C*Phi(:,1);
+
+scal_w = max(abs(W(:,1)));
+scal_adj_w = max(abs(W_adj(:,1)));
+
+figure
+tiledlayout(1,2,"TileSpacing","compact","Padding","compact")
+nexttile;
+plot(abs(1/scal.*V_State(:,1)),"b")
+set(gca,"FontSize",20)
+box off
+hold on
+plot(abs(1/scal_adj(end).*Phi(:,1)),"r")
+legend("LIS","adj")
+legend boxoff
+title("First vector of trial basis $V_1$","Interpreter","latex","FontSize",28)
+
+nexttile;
+plot(abs(1/scal_w.*W(:,1)),"b")
+set(gca,"FontSize",20)
+box off
+hold on
+plot(abs(1/scal_adj_w.*W_adj(:,1)),"r")
+legend("LIS","adj")
+legend boxoff
+title("First vector of test basis $W_1$","Interpreter","latex","FontSize",28)
+
+
+set(gcf, 'Units', 'inches');
+set(gcf, 'Position', [0.5 0.5 width height]);
+set(gcf, 'PaperUnits', 'inches');
+set(gcf, 'PaperSize', [width height]);
